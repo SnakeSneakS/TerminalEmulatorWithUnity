@@ -14,7 +14,25 @@ public class Input : MonoBehaviour
     {
         //buttonクリックでコマンド実行
         commandSubmitButton.onClick.AddListener(() => {
-            command.Execute(inputField.text);
+            //UnityEngine.Debug.Log(Command._IsReactiveMode?"Reactive":"Not reactive");
+            if (Command._IsReactiveMode == true)
+            {
+                if (Command.SW.BaseStream.CanWrite)
+                {
+                    Command.SW.WriteLine(inputField.text);
+                    UnityEngine.Debug.Log("stream write: "+inputField.text);
+                    if(inputField.text=="exit") Command.SW.Close();
+                }
+                else
+                {
+                    UnityEngine.Debug.Log("stream can't write");
+                }
+            }
+            else
+            {
+                command.Execute(inputField.text);
+            }
+
             inputField.text = "";
         });
 

@@ -23,14 +23,10 @@ public partial class Command
 
             //cd
             { "cd", NewHandler_Cd() },
-            //default
-            /*
-            {
-                "", new DataReceivedEventHandler((s, e) => {
-                    output.Log_result(e.Data);
-                })
-            },
-            */
+
+            //sh reactive
+            {"ShReactive", NewHandler_ShReactive() },
+            
         };
     }
 }

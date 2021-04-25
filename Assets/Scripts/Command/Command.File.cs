@@ -7,6 +7,7 @@ using UnityEngine;
 //Path
 public partial class Command 
 {
+    
     //ExecuteFile: bin/bashなど、ファイルでコマンドを実行する。見つからなかった場合はShFileNameを実行する。
     private void ExecuteFile(string command, DataReceivedEventHandler handler_data, DataReceivedEventHandler handler_error)
     {
@@ -30,12 +31,10 @@ public partial class Command
                 proc.StartInfo.FileName = fileName;
                 proc.StartInfo.Arguments = arguments;
                 proc.StartInfo.UseShellExecute = false;
-                //proc.StartInfo.RedirectStandardInput = true;
                 proc.StartInfo.RedirectStandardOutput = true;
                 proc.StartInfo.RedirectStandardError = true;
                 proc.StartInfo.RedirectStandardInput = false;
                 proc.StartInfo.WorkingDirectory = WorkingDirectory;
-                //proc.StartInfo.RedirectStandardError = true;
 
                 proc.OutputDataReceived += handler_data;
                 proc.ErrorDataReceived += handler_error;
@@ -57,6 +56,10 @@ public partial class Command
             return;
         }
     }
+
+
+    
+
 
     private string FindFilesUnderPATH(string commandFlag)
     {

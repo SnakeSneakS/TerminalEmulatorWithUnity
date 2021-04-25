@@ -158,11 +158,6 @@ public partial class Output : MonoBehaviour
         Canvas.ForceUpdateCanvases();
     }
 
-    public void AddLogSizeControlEvent()
-    {
-        //LogSizeControlUI.OnPointerDown.
-    }
-
 
 
 
