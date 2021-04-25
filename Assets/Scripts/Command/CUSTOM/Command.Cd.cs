@@ -25,26 +25,24 @@ public partial class Command
 
         _IsExecuting = true;
 
-        output.Log_execute(command, Output.LogOption.NewSingleLineGreen());
-        
-            string[] command_split = command.Split(' ');
-            if (command_split.Length > 1)
+        string[] command_split = command.Split(' ');
+        if (command_split.Length > 1)
+        {
+            string newPath = this.GetFullPath(command_split[1]);
+            if (Directory.Exists(newPath))
             {
-                string newPath = this.GetFullPath(command_split[1]);
-                if (Directory.Exists(newPath))
-                {
-                    Command.WorkingDirectory = newPath;
-                    output.Log_result("Working directory: " + newPath, Output.LogOption.NewSingleLineWhite());
-                }
-                else
-                {
-                    output.Log_result("Not found directory name: \"" + newPath + "\"", Output.LogOption.NewSingleLineRed());
-                }
+                Command.WorkingDirectory = newPath;
+                output.Log_result("Working directory: " + newPath, Output.LogOption.NewSingleLineWhite());
             }
             else
             {
-                output.Log_result("Error: Command \"cd\" needs argument", Output.LogOption.NewSingleLineRed());
+                output.Log_result("Not found directory name: \"" + newPath + "\"", Output.LogOption.NewSingleLineRed());
             }
+        }
+        else
+        {
+            output.Log_result("Error: Command \"cd\" needs argument", Output.LogOption.NewSingleLineRed());
+        }
         
         
         _IsExecuting = false;
@@ -52,7 +50,7 @@ public partial class Command
 
     private string GetFullPath(string oldPath)
     {
-        string newPath = Path.GetFullPath( WorkingDirectory+"/"+oldPath);
+        string newPath = Path.Combine( WorkingDirectory, oldPath);
         return newPath;
     }
 

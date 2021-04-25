@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 //Sh
 public partial class Command
@@ -56,73 +57,84 @@ public partial class Command
     //ExecuteShReactive: bin/bashなど、リアクティブシェルを実行する。
     private void ExecuteShReactive(string command, DataReceivedEventHandler handler_data, DataReceivedEventHandler handler_error)
     {
-        if (_IsExecuting) return;
-        if (command == "") return;
+        if (_IsExecuting) { UnityEngine.Debug.Log("Error: Executing other process!"); return; }
+        if (command == "") { UnityEngine.Debug.Log("Error: No command is found!"); return; }
 
-        try
+        Thread t = new Thread(new ThreadStart(() =>
         {
-            using (Process proc = new System.Diagnostics.Process())
-            {
-                proc.StartInfo.FileName = ShFileName;
-                proc.StartInfo.Arguments = "";
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.RedirectStandardInput = true;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
-                proc.StartInfo.WorkingDirectory = WorkingDirectory;
+              try
+              {
+                  using (Process proc = new System.Diagnostics.Process())
+                  {
+                      proc.StartInfo.FileName = ShFileName;
+                      proc.StartInfo.Arguments = "";
+                      proc.StartInfo.WorkingDirectory = WorkingDirectory;
+                      proc.StartInfo.CreateNoWindow = true;
+                      proc.StartInfo.UseShellExecute = false;
+                      proc.StartInfo.RedirectStandardInput = true;
+                      proc.StartInfo.RedirectStandardOutput = true;
+                      proc.StartInfo.RedirectStandardError = true;
 
-                proc.OutputDataReceived += handler_data;
-                proc.ErrorDataReceived += handler_error;
+                      proc.OutputDataReceived += handler_data;
+                      proc.ErrorDataReceived += handler_error;
 
-                //非同期?
-                proc.EnableRaisingEvents = true;
-                proc.Exited += new EventHandler((sender,e) => {
-                    _IsReactiveMode = false;
-                    _IsExecuting = false;
-                    UnityEngine.Debug.Log("Sh process end!!");
-                    SW.Close();
-                });
 
-                _IsExecuting = true;
-                _IsReactiveMode = true;
+                      //終了(非同期)
+                      proc.EnableRaisingEvents = true;
+                      proc.Exited += ((sender, e) => {
+                          _IsReactiveMode = false;
+                          _IsExecuting = false;
+                          UnityEngine.Debug.Log("Process end: " + ((Process)sender).Id.ToString());
+                          SW.Close();
+                      });
 
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
+                      _IsExecuting = true;
+                      _IsReactiveMode = true;
 
-                SW = proc.StandardInput;
-                if (SW.BaseStream.CanWrite)
-                {
-                    SW.WriteLine("pwd");
-                    SW.WriteLine("ls ./");
-                }
-                /* Inputの例
-                StreamWriter streamWriter = proc.StandardInput;
-                if (streamWriter.BaseStream.CanWrite)
-                {
-                    streamWriter.WriteLine("pwd");
-                    streamWriter.WriteLine("ls ./");
-                    streamWriter.WriteLine("exit");
-                }
-                streamWriter.Close();
-                */
+                      //開始
+                      proc.Start();
+                      proc.BeginOutputReadLine();
+                      proc.BeginErrorReadLine();
 
-                /* 同期だった場合に使っていた
-                proc.WaitForExit(); => EnableRaisingEvents
-                _IsReactiveMode = false;
-                _IsExecuting = false;
-                UnityEngine.Debug.Log("Sh process end!!");
-                */
+                      //入力
+                      SW = proc.StandardInput;
+                      if (SW.BaseStream.CanWrite)
+                      {
+                          SW.WriteLine("pwd");
+                          SW.WriteLine("ls ./");
+                      }
 
-                return;
-            }
-        }
-        catch (Exception e)
-        {
-            string result = "[Error!!] " + e.Message;
-            UnityEngine.Debug.Log(result);
-            return;
-        }
+                      proc.WaitForExit();
+                      /* Inputの例
+                      StreamWriter streamWriter = proc.StandardInput;
+                      if (streamWriter.BaseStream.CanWrite)
+                      {
+                          streamWriter.WriteLine("pwd");
+                          streamWriter.WriteLine("ls ./");
+                          streamWriter.WriteLine("exit");
+                      }
+                      streamWriter.Close();
+                      */
+
+                      /* 同期だった場合に使っていた
+                      proc.WaitForExit(); => EnableRaisingEvents
+                      _IsReactiveMode = false;
+                      _IsExecuting = false;
+                      UnityEngine.Debug.Log("Sh process end!!");
+                      */
+
+                      return;
+                  }
+              }
+              catch (Exception e)
+              {
+                  string result = "[Error!!] " + e.Message;
+                  UnityEngine.Debug.Log(result);
+                  return;
+              }
+        }));
+
+        t.Start();
     }
 
     //Handler

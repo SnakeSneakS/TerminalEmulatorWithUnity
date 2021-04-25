@@ -21,7 +21,6 @@ public class Input : MonoBehaviour
                 {
                     Command.SW.WriteLine(inputField.text);
                     UnityEngine.Debug.Log("stream write: "+inputField.text);
-                    if(inputField.text=="exit") Command.SW.Close();
                 }
                 else
                 {
