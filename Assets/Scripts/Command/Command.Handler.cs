@@ -25,7 +25,7 @@ public partial class Command
             { "cd", NewHandler_Cd() },
 
             //sh reactive
-            {"ShReactive", NewHandler_ShReactive() },
+            {"LOGIN", NewHandler_LoginShell() },
             
         };
     }

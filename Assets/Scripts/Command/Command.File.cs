@@ -8,7 +8,7 @@ using System.Threading;
 //Command Execute {File}
 public partial class Command 
 {
-    //ExecuteFile: bin/bashなど、ファイルでコマンドを実行する。見つからなかった場合はShFileNameを実行する。
+    //ExecuteFile: bin/bashなど、ファイルでコマンドを実行する。見つからなかった場合はShFileNameを実行する。これはリアクティブ（対話）モードではない
     private void ExecuteFile(string command, DataReceivedEventHandler handler_data, DataReceivedEventHandler handler_error)
     {
         if (_IsExecuting) { UnityEngine.Debug.Log("Error: Executing other process!"); return; }
@@ -20,7 +20,7 @@ public partial class Command
         string arguments = (command_split.Length>1) ? command_split[1]: "";
 
         if (fileName == null){
-            fileName = ShFileName;
+            fileName = ShellFileName;
             arguments = "-c \" " + command + " \"";
         }
 

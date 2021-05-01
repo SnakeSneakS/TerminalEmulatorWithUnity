@@ -13,11 +13,13 @@ public partial class Command : MonoBehaviour
         PATH
     }
 
-    public static string ShFileName = ""; //"/bin/zsh"; "/bin/bash";
+    public static string ShellFileName = ""; //"/bin/zsh"; "/bin/bash";
     [SerializeField] public static string WorkingDirectory;
     public static string PATH = "";
 
-    [SerializeField] public static bool _IsExecuting = false;
+    public static bool _IsExecuting = false;
+    public static string NowReactiveProcessName = "";
+    
     [SerializeField] public Output output;
     [SerializeField] public Dictionary<string, Handler> command_handlers;
 
@@ -26,23 +28,35 @@ public partial class Command : MonoBehaviour
     {
         GetLocalDatas();
         command_handlers = NewCommandHandler(output);
-        
-        if(ShFileName=="") ShFileName ="/bin/bash"; //"/bin/bash";
-        if(PATH=="") PATH = Environment.GetEnvironmentVariable("PATH",EnvironmentVariableTarget.Process); //本当はMachineを取得したいけどNULLが帰ってくる
-        if(WorkingDirectory=="") WorkingDirectory = Environment.CurrentDirectory;
 
-        //Debug.Log(Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process));
+        if (ShellFileName == "")
+        {
+            ShellFileName = Environment.GetEnvironmentVariable("SHELL", EnvironmentVariableTarget.Process); //"/bin/bash";
+            SetShellFileName(ShellFileName);
+        }
+        if (PATH == "")
+        {
+            PATH = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process); //本当はMachineを取得したいけどNULLが帰ってくる
+            SetPATH(PATH);
+        }
+        if (WorkingDirectory == "")
+        {
+            WorkingDirectory = Environment.CurrentDirectory;
+            SetWorkingDirectory(WorkingDirectory);
+        }
+
     }
 
     private void Start()
     {
         ShowLocalDatas();
+        //Execute_LoginShell(ShellFileName, output);
     }
 
     //PlayerPrefsからデータを読み取る
     private void GetLocalDatas()
     {
-        ShFileName = PlayerPrefs.GetString( SettingName.ShFileName.ToString() );
+        ShellFileName = PlayerPrefs.GetString( SettingName.ShFileName.ToString() );
         PATH=PlayerPrefs.GetString( SettingName.PATH.ToString() );
         WorkingDirectory = PlayerPrefs.GetString( SettingName.WorkingDirectory.ToString() );
     }
@@ -51,13 +65,13 @@ public partial class Command : MonoBehaviour
     private void ShowLocalDatas()
     {
         output.Log_execute("SETTINGS",Output.LogOption.NewSingleLineGreen() );
-        output.Log_Show("ShFileName: "+ShFileName, Output.LogOption.NewMultipleLineWhite() );
-        output.Log_Show("PATH: " + PATH, Output.LogOption.NewMultipleLineWhite());
-        output.Log_Show("WorkingDirectory: " + WorkingDirectory, Output.LogOption.NewMultipleLineWhite());
+        output.Log_result("ShellFileName: "+ShellFileName, Output.LogOption.NewMultipleLineWhite() );
+        output.Log_result("PATH: " + PATH, Output.LogOption.NewMultipleLineWhite());
+        output.Log_result("WorkingDirectory: " + WorkingDirectory, Output.LogOption.NewMultipleLineWhite());
     }
 
-    //PlayerPrefsにShFileNameを保存する
-    public void SetShFileName(string s)
+    //PlayerPrefsにShellFileNameを保存する
+    public void SetShellFileName(string s)
     {
         PlayerPrefs.SetString( SettingName.ShFileName.ToString(), s);
     }

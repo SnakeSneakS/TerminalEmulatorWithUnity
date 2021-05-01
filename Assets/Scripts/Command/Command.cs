@@ -14,19 +14,35 @@ public partial class Command: MonoBehaviour
         string command_flag = command.Split(' ')[0];
         Handler handler;
 
-        //output.Log_execute(command_flag, new Output.LogOption{} );
+        //実行コマンドを出力
         output.Log_execute(command, Output.LogOption.NewSingleLineGreen() );
 
-        //コマンドが見つかれば、そのコマンドのhandler実行
-        if ( command_handlers.TryGetValue(command_flag,out handler) )
+        if(Command._IsReactiveMode) //対話モードの場合、実行中のプロセス(zshなど)にシェル実行などを任せる。
         {
-            handler.act(command, output);
+            if (Command.SW != null && Command.SW.BaseStream.CanWrite)
+            {
+                Command.SW.WriteLine(command);
+                UnityEngine.Debug.Log("stream write: " + command);
+            }
+            else
+            {
+                UnityEngine.Debug.Log("stream can't write");
+            }
         }
-        //コマンドが見つからなければ、shFileName(/bin/zshなど)を実行
-        else
+        else //対話モードではない場合、自力で探す
         {
-            NewHandler_Default(command,output).act(command,output);
-        } 
+            //コマンドが見つかれば、そのコマンドのhandler実行
+            if (command_handlers.TryGetValue(command_flag, out handler))
+            {
+                handler.act(command, output);
+            }
+            //コマンドが見つからなければ、shellFileName(/bin/zshなど)を実行
+            else
+            {
+                NewHandler_Default(command, output).act(command, output);
+            }
+        }
+
     }
 
 }
