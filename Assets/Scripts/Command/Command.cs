@@ -15,32 +15,39 @@ public partial class Command: MonoBehaviour
         Handler handler;
 
         //実行コマンドを出力
-        output.Log_execute(command, Output.LogOption.NewSingleLineGreen() );
+        output.Log_execute(command);
 
-        if(Command._IsReactiveMode) //対話モードの場合、実行中のプロセス(zshなど)にシェル実行などを任せる。
+        if(Command._IsInteractiveMode) //対話モードの場合、実行中のプロセス(zshなど)のStreamWriterへ書き込む
         {
             if (Command.SW != null && Command.SW.BaseStream.CanWrite)
             {
+                
+                //コマンドが見つかれば、そのコマンドのhandler実行
+                if (command_handlers.TryGetValue(command_flag, out handler))
+                {
+                    handler.act(command, output);
+                }
+                //コマンドが見つからなければ、shellFileName(/bin/zshなど)を実行
+                else
+                {
+                    if (command_handlers.TryGetValue("default", out handler)) handler.act(command, output);
+                    else UnityEngine.Debug.LogError("Default handler was not found!");
+                }
+
+                //Reactiveモードのシェルにコマンドを書き込む
                 Command.SW.WriteLine(command);
                 UnityEngine.Debug.Log("stream write: " + command);
+
             }
             else
             {
                 UnityEngine.Debug.Log("stream can't write");
             }
         }
-        else //対話モードではない場合、自力で探す
+        else //対話モードではない場合、LOGIN SHELL のみ可能にする
         {
-            //コマンドが見つかれば、そのコマンドのhandler実行
-            if (command_handlers.TryGetValue(command_flag, out handler))
-            {
-                handler.act(command, output);
-            }
-            //コマンドが見つからなければ、shellFileName(/bin/zshなど)を実行
-            else
-            {
-                NewHandler_Default(command, output).act(command, output);
-            }
+            if (command == "LOGIN") Execute_LoginShell(command, output);
+            else output.Log_error("Enter \"LOGIN\" to Start...");
         }
 
     }

@@ -8,50 +8,9 @@ using System.Threading;
 //Sh
 public partial class Command
 {
-    //Excecute Sh: 一番最後に実行される
-    //ExecuteCommandに吸収させた
-    /*
-    private void ExecuteSh(string command, DataReceivedEventHandler handler_data, DataReceivedEventHandler handler_error)
-    {
-        if (_IsExecuting) return;
-
-        try
-        {
-            using (Process proc = new System.Diagnostics.Process())
-            {
-                proc.StartInfo.FileName = ShFileName;
-                proc.StartInfo.Arguments = "-c \" " + command + " \"";
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
-                proc.StartInfo.RedirectStandardInput = false;
-                proc.StartInfo.WorkingDirectory = WorkingDirectory;
-                //proc.StartInfo.RedirectStandardError = true;
-
-                proc.OutputDataReceived += handler_data;
-                proc.ErrorDataReceived += handler_error;
-
-                _IsExecuting = true;
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-                proc.WaitForExit();
-                _IsExecuting = false;
-
-                return;
-            }
-        }
-        catch (Exception e)
-        {
-            string result = "[Error!!] " + e.Message;
-            UnityEngine.Debug.Log(result);
-            return;
-        }
-    }
-    */
-
     public static StreamWriter SW;
-    public static bool _IsReactiveMode;
+    public static bool _IsInteractiveMode;
+
 
     //REACTIVEにShを実行する。ログインシェル(リアクティブシェル)を実行
     //ExecuteShReactive: bin/bashなど、ログインシェル(リアクティブシェル)を実行する。
@@ -67,7 +26,7 @@ public partial class Command
                 using (Process proc = new System.Diagnostics.Process())
                 {
                     proc.StartInfo.FileName = ShellFileName; //command; // /bin/zshなどのShellFileName
-                    proc.StartInfo.Arguments = "-l"; //"";
+                    proc.StartInfo.Arguments = "-l"; //"-l -i -s";
                     proc.StartInfo.WorkingDirectory = WorkingDirectory;
                     proc.StartInfo.CreateNoWindow = true;
                     proc.StartInfo.UseShellExecute = false;
@@ -75,38 +34,89 @@ public partial class Command
                     proc.StartInfo.RedirectStandardOutput = true;
                     proc.StartInfo.RedirectStandardError = true;
 
-                    proc.OutputDataReceived += handler_data;
-                    proc.ErrorDataReceived += handler_error;
 
+                    
+                    //正常output
+                    proc.OutputDataReceived += handler_data;
+                    //エラーoutput
+                    proc.ErrorDataReceived += handler_error;
 
                     //終了(非同期)
                     proc.EnableRaisingEvents = true;
                     proc.Exited += ((sender, e) => {
-                        _IsReactiveMode = false;
+                        _IsInteractiveMode = false;
                         _IsExecuting = false;
                         NowReactiveProcessName = "";
-                        output.Log_result("Process end...",Output.LogOption.NewSingleLineWhite() );
-                        UnityEngine.Debug.Log("Process end: " + ((Process)sender).Id.ToString() );
+                        output.Log_success("Process end..." + ((Process)sender).Id.ToString());
+                        SW.WriteLine("exit");
                         SW.Close();
                     });
 
                     _IsExecuting = true;
-                    _IsReactiveMode = true;
+                    _IsInteractiveMode = true;
                     NowReactiveProcessName = proc.StartInfo.FileName;
 
                     //開始
                     proc.Start();
                     proc.BeginOutputReadLine();
                     proc.BeginErrorReadLine();
-
                     //入力
                     SW = proc.StandardInput;
                     if (SW.BaseStream.CanWrite)
                     {
-                        SW.WriteLine("echo \"PROCESS START!! LOGIN SHELL PROCESS...\" ");
+                        SW.WriteLine("echo \"PROCESS START...\" ");
+                    }
+                    proc.WaitForExit();
+
+
+
+                    /*
+                    //改行されていない途中までのやつを読み込みたい
+                    proc.Start();
+                    _IsExecuting = true;
+                    _IsInteractiveMode = true;
+                    NowReactiveProcessName = proc.StartInfo.FileName;
+                    SW = proc.StandardInput;
+                    if (SW.BaseStream.CanWrite) SW.WriteLine("echo \"PROCESS START...\" ");
+
+                    StreamReader SRO = proc.StandardOutput;
+                    StreamReader SRE = proc.StandardError;
+                    output.logDisplayLine = Output.LogDisplayLine.Single;
+                    while (true)
+                    {
+                        string so = "";
+                        while (SRO.Peek() != -1 )
+                        {
+                            so += (char)SRO.Read();
+                        }
+                        if (!String.IsNullOrEmpty(so))
+                        {
+                            output.Log_show("SO: " + so, Output.LogDisplayColor.White, output.logDisplayLine);
+                        }
+                        
+                        string se = "";
+                        while (SRE.Peek() != -1)
+                        {
+                            se += (char)SRE.Read();
+                            output.Log_show("XXXXXXXXXXXXXXXXXXXXXXXXX", Output.LogDisplayColor.White, output.logDisplayLine);
+                        }
+                        if (!String.IsNullOrEmpty(se))
+                        {
+                            output.Log_show("SE: " + se, Output.LogDisplayColor.White, output.logDisplayLine);
+                        }
+
+                        if (proc.HasExited) break;
                     }
 
                     proc.WaitForExit();
+                    _IsInteractiveMode = false;
+                    _IsExecuting = false;
+                    NowReactiveProcessName = "";
+                    output.Log_success("Process end...");
+                    SW.WriteLine("exit");
+                    SW.Close();
+                    */
+
                     return;
                 }
             }
@@ -115,7 +125,7 @@ public partial class Command
                 if (e == null) return;
                 string result = "[Error!!] " + e.Message;
                 UnityEngine.Debug.LogError(result);
-                output.Log_result(result, Output.LogOption.NewSingleLineRed());
+                output.Log_error(result);
                 return;
             }
         }));
@@ -144,7 +154,7 @@ public partial class Command
     {
         return new DataReceivedEventHandler((s, e) =>
         {
-            output.Log_result(e.Data, Output.LogOption.NewSingleLineWhite());
+            output.Log_success(e.Data);
         });
     }
 
@@ -153,7 +163,7 @@ public partial class Command
     {
         return new DataReceivedEventHandler((s, e) =>
         {
-            output.Log_result(e.Data, Output.LogOption.NewSingleLineRed());
+            output.Log_error(e.Data);
         });
     }
 

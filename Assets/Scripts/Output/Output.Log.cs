@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 //Output_Log
 public partial class Output : MonoBehaviour
 {
-    public static int SingleLineStringLengthMax = 20;
+    public static int SingleLineStringLengthMax = 10;
 
     [SerializeField] ScrollRect LogOutputAreaScrollView;
     [SerializeField] GameObject LogOutputContent;
@@ -21,74 +21,61 @@ public partial class Output : MonoBehaviour
     [SerializeField] private RectTransform LogText_Output_RectTransform; //リサイズ用
     [SerializeField] private Text LogText_Input; //入力表示用
 
+    //Original History にLogを保存する
+    public Original.MyHistory myHistory = new Original.MyHistory();
 
-    public enum LogDisplayType
+    //LogOptionの設定
+    public LogType logType = LogType.Success;
+    public LogDisplayLine logDisplayLine = LogDisplayLine.Multiple;
+
+    public enum LogType
     {
-        SingleLine, //SingleLine(ただし「文字数>SingleLineStringLengthMax」の場合は改行する)
-        MultipleLine,
+        Success,
+        Error,
     }
-
+    public enum LogDisplayLine
+    {
+        Single, //SingleLine(ただし「文字数>SingleLineStringLengthMax」の場合は改行する)
+        Multiple,
+    }
     public enum LogDisplayColor
     {
-        Black,
         White,
+        Black,
         Red,
         Green,
     }
 
-    //ログのオプション
-    public class LogOption
-    {
-        public LogDisplayType type { get; set; }
-        public LogDisplayColor color { get; set; }
-        public LogOption(LogDisplayType type, LogDisplayColor color)
-        {
-            this.type = type;
-            this.color = color;
-        }
-        public static LogOption NewSingleLineBlack()
-        {
-            return new LogOption(LogDisplayType.SingleLine, LogDisplayColor.Black);
-        }
-        public static LogOption NewSingleLineWhite()
-        {
-            return new LogOption(LogDisplayType.SingleLine, LogDisplayColor.White);
-        }
-        public static LogOption NewSingleLineRed()
-        {
-            return new LogOption(LogDisplayType.SingleLine, LogDisplayColor.Red);
-        }
-        public static LogOption NewSingleLineGreen()
-        {
-            return new LogOption(LogDisplayType.SingleLine, LogDisplayColor.Green);
-        }
-        public static LogOption NewMultipleLineBlack()
-        {
-            return new LogOption(LogDisplayType.MultipleLine, LogDisplayColor.Black);
-        }
-        public static LogOption NewMultipleLineWhite()
-        {
-            return new LogOption(LogDisplayType.MultipleLine, LogDisplayColor.White);
-        }
-    }
-
     //実行
-    public void Log_execute(string s, LogOption option)
+    public void Log_execute(string s)
     {
-        AddNewLine(2);
-        Log_Show(Command.NowReactiveProcessName+"> "+s, option);
+        myHistory.NewHistLine();
+        //AddNewLine(2);
+        myHistory.SetCommand(Command.NowReactiveProcessName+"> ");
         UnityEngine.Debug.Log("Command: " + s);
-        AddNewLine(1);
+        //AddNewLine(1);
     }
 
     //結果表示
-    public void Log_result(string s, LogOption option)
+    public void Log_success(string s)
     {
-        Log_Show(s, option);
+        myHistory.SetResultSuccess(s);
+        UnityEngine.Debug.Log("SUCCESS: " + s);
+    }
+    //error表示
+    public void Log_error(string s)
+    {
+        myHistory.SetResultError(s);
+        UnityEngine.Debug.Log("ERROR: " + s);
+    }
+    //終了
+    public void Log_end(string s)
+    {
+        
     }
 
     //log表示
-    private void Log_Show(string s, LogOption option)
+    public void Log_show(int nowLogLine)
     {
         if (s == "" || s==null) return; //出力するものがある時のみ出力する
         UnityEngine.Debug.Log("LOG SHOW: "+s);
@@ -96,12 +83,12 @@ public partial class Output : MonoBehaviour
         //error check
         if (LogText_Output == null || LogText_Output_InputField == null)
         {
-            Debug.LogError("NOT FOUND LOGTEXT FOR DISPLAY!!");
+            Debug.LogError("NOT FOUND LOGTEXT FOR DISPLAY!!  \ncommand.... "+s);
             return;
         }
 
         //色付け
-        switch (option.color)
+        switch (logDisplayColor)
         {
             case LogDisplayColor.Black:
                 LogString_Output += "<color=#000000ff>" + s + "</color>";
@@ -120,37 +107,33 @@ public partial class Output : MonoBehaviour
         }
 
         //１行or複数行
-        switch (option.type)
+        switch (logDisplayLine)
         {
-            case LogDisplayType.SingleLine:
-                if (s.Length > SingleLineStringLengthMax)
-                {
-                    LogString_Output += "\n";
-                }
-                else
-                {
-                    LogString_Output += " ";
-                }
-                //LogString_Output += "\n";
+            case LogDisplayLine.Single:
+                if (s.Length > SingleLineStringLengthMax)  LogString_Output += "\n";
+                else LogString_Output += " ";
                 break;
-            case LogDisplayType.MultipleLine:
+            case LogDisplayLine.Multiple:
                 LogString_Output += "\n";
                 break;
             default:
                 break;
         }
 
-        //UIの操作などはMainThreadで行わなければならない
-        //Dispatcherを介すことでMainThreadで行う
-        int stringLength = s.Length;
+        LogText_Update();
+    }
+
+    //Updateする
+    //UIの操作などはMainThreadで行わなければならない(Dispatcherを介す)
+    public void LogText_Update()
+    {
         TotalManager.dispatcher.Invoke(() => {
             LogText_Output.text = LogString_Output;
-            LogText_Output_InputField.text = SubstringTag( LogString_Output );
+            LogText_Output_InputField.text = SubstringTag(LogString_Output);
             ResizeInputField();
             UpdateLogInput("");
             GoToBottomOfLogContent();
         });
-
     }
 
     //改行する

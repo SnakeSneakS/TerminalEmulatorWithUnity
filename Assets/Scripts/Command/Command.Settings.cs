@@ -10,12 +10,12 @@ public partial class Command : MonoBehaviour
     {
         ShFileName,
         WorkingDirectory,
-        PATH
+        //PATH,
     }
 
     public static string ShellFileName = ""; //"/bin/zsh"; "/bin/bash";
-    [SerializeField] public static string WorkingDirectory;
-    public static string PATH = "";
+    public static string WorkingDirectory="";
+    //public static string PATH = "";
 
     public static bool _IsExecuting = false;
     public static string NowReactiveProcessName = "";
@@ -33,11 +33,6 @@ public partial class Command : MonoBehaviour
         {
             ShellFileName = Environment.GetEnvironmentVariable("SHELL", EnvironmentVariableTarget.Process); //"/bin/bash";
             SetShellFileName(ShellFileName);
-        }
-        if (PATH == "")
-        {
-            PATH = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process); //本当はMachineを取得したいけどNULLが帰ってくる
-            SetPATH(PATH);
         }
         if (WorkingDirectory == "")
         {
@@ -57,17 +52,15 @@ public partial class Command : MonoBehaviour
     private void GetLocalDatas()
     {
         ShellFileName = PlayerPrefs.GetString( SettingName.ShFileName.ToString() );
-        PATH=PlayerPrefs.GetString( SettingName.PATH.ToString() );
         WorkingDirectory = PlayerPrefs.GetString( SettingName.WorkingDirectory.ToString() );
     }
 
     //ShowLogOfLocalDatas
     private void ShowLocalDatas()
     {
-        output.Log_execute("SETTINGS",Output.LogOption.NewSingleLineGreen() );
-        output.Log_result("ShellFileName: "+ShellFileName, Output.LogOption.NewMultipleLineWhite() );
-        output.Log_result("PATH: " + PATH, Output.LogOption.NewMultipleLineWhite());
-        output.Log_result("WorkingDirectory: " + WorkingDirectory, Output.LogOption.NewMultipleLineWhite());
+        output.Log_execute("SETTINGS" );
+        output.Log_success("ShellFileName: "+ShellFileName );
+        output.Log_success("WorkingDirectory: " + WorkingDirectory );
     }
 
     //PlayerPrefsにShellFileNameを保存する
@@ -75,11 +68,15 @@ public partial class Command : MonoBehaviour
     {
         PlayerPrefs.SetString( SettingName.ShFileName.ToString(), s);
     }
+
+    /*
     //PreyerPrefsにPATHを保存する
     public void SetPATH(string s)
     {
         PlayerPrefs.SetString( SettingName.PATH.ToString(), s);
     }
+    */
+
     //PlayerPrefsにWorkingDirectoryを保存する
     public void SetWorkingDirectory(string s)
     {
