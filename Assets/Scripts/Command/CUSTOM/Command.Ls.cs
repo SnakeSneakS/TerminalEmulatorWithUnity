@@ -19,7 +19,7 @@ public partial class Command
     //実行
     private void Execute_Ls(string command, Output output)
     {
-        output.logDisplayLine = Output.LogDisplayLine.Multiple;
+
     }
 
 }

@@ -6,5 +6,5 @@ using UnityEngine.UI;
 //Output
 public partial class Output : MonoBehaviour
 {
-    
+    [SerializeField] public Input input;
 }

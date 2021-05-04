@@ -5,34 +5,26 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Text.RegularExpressions;
 
-//Output_Log
+//Output_Log(MyHistory)
 public partial class Output : MonoBehaviour
 {
-    public static int SingleLineStringLengthMax = 10;
-
     [SerializeField] ScrollRect LogOutputAreaScrollView;
     [SerializeField] GameObject LogOutputContent;
     [SerializeField] GameObject LogText_Pref;
 
     private string LogString_Output="";
+    private string LogString_InputField = "";
+
     [SerializeField] private InputField LogText_Output_InputField; //コピーや選択する用
     [SerializeField] private RectTransform LogText_Output_InputField_RectTransform; //リサイズ用
     [SerializeField] private Text LogText_Output; //表示用
     [SerializeField] private RectTransform LogText_Output_RectTransform; //リサイズ用
     [SerializeField] private Text LogText_Input; //入力表示用
 
-    //Original History にLogを保存する
-    public Original.MyHistory myHistory = new Original.MyHistory();
-
-    //LogOptionの設定
-    public LogType logType = LogType.Success;
-    public LogDisplayLine logDisplayLine = LogDisplayLine.Multiple;
-
-    public enum LogType
-    {
-        Success,
-        Error,
-    }
+    
+    public Original.MyHistory myHistory = new Original.MyHistory(50); //Original History にLogを保存する
+    
+    //現在はMultipleのみにしている
     public enum LogDisplayLine
     {
         Single, //SingleLine(ただし「文字数>SingleLineStringLengthMax」の場合は改行する)
@@ -44,84 +36,71 @@ public partial class Output : MonoBehaviour
         Black,
         Red,
         Green,
+        Orange,
     }
 
     //実行
     public void Log_execute(string s)
     {
+        if (string.IsNullOrEmpty(s)) return;
         myHistory.NewHistLine();
-        //AddNewLine(2);
-        myHistory.SetCommand(Command.NowReactiveProcessName+"> ");
+        myHistory.SetCommand(Command.NowReactiveProcessName+"> "+s);
         UnityEngine.Debug.Log("Command: " + s);
-        //AddNewLine(1);
+        myHistory.setDisplayLineToWriteLine();
+        Log_show(myHistory.displayHistLine);
+
+        input.EventWhenExecuteCommand();
     }
 
     //結果表示
     public void Log_success(string s)
     {
+        if (string.IsNullOrEmpty(s)) return;
         myHistory.SetResultSuccess(s);
         UnityEngine.Debug.Log("SUCCESS: " + s);
+        myHistory.setDisplayLineToWriteLine();
+        Log_show(myHistory.displayHistLine);
     }
     //error表示
     public void Log_error(string s)
     {
+        if (string.IsNullOrEmpty(s)) return;
         myHistory.SetResultError(s);
         UnityEngine.Debug.Log("ERROR: " + s);
+        myHistory.setDisplayLineToWriteLine();
+        Log_show(myHistory.displayHistLine);
     }
     //終了
+    /*
     public void Log_end(string s)
     {
         
     }
+    */
 
     //log表示
-    public void Log_show(int nowLogLine)
+    public void Log_show(int displayLogLine)
     {
-        if (s == "" || s==null) return; //出力するものがある時のみ出力する
-        UnityEngine.Debug.Log("LOG SHOW: "+s);
+        if(displayLogLine<0 || displayLogLine >= myHistory.histories.Length)
+        {
+            UnityEngine.Debug.LogError("outside of histories");
+            return;
+        }
+        myHistory.displayHistLine = displayLogLine;
 
         //error check
         if (LogText_Output == null || LogText_Output_InputField == null)
         {
-            Debug.LogError("NOT FOUND LOGTEXT FOR DISPLAY!!  \ncommand.... "+s);
+            Debug.LogError("NOT FOUND LOGTEXT FOR DISPLAY!!\n");
             return;
         }
 
-        //色付け
-        switch (logDisplayColor)
-        {
-            case LogDisplayColor.Black:
-                LogString_Output += "<color=#000000ff>" + s + "</color>";
-                break;
-            case LogDisplayColor.White:
-                LogString_Output += "<color=#ffffffff>" + s + "</color>";
-                break;
-            case LogDisplayColor.Red:
-                LogString_Output += "<color=#ff0000ff>" + s + "</color>";
-                break;
-            case LogDisplayColor.Green:
-                LogString_Output += "<color=#00ff00ff>" + s + "</color>";
-                break;
-            default:
-                break;
-        }
-
-        //１行or複数行
-        switch (logDisplayLine)
-        {
-            case LogDisplayLine.Single:
-                if (s.Length > SingleLineStringLengthMax)  LogString_Output += "\n";
-                else LogString_Output += " ";
-                break;
-            case LogDisplayLine.Multiple:
-                LogString_Output += "\n";
-                break;
-            default:
-                break;
-        }
+        LogString_InputField = myHistory.histories[myHistory.displayHistLine].Command_Uncolored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Uncolored;
+        LogString_Output = myHistory.histories[myHistory.displayHistLine].Command_Colored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Colored;
 
         LogText_Update();
     }
+    
 
     //Updateする
     //UIの操作などはMainThreadで行わなければならない(Dispatcherを介す)
@@ -129,31 +108,10 @@ public partial class Output : MonoBehaviour
     {
         TotalManager.dispatcher.Invoke(() => {
             LogText_Output.text = LogString_Output;
-            LogText_Output_InputField.text = SubstringTag(LogString_Output);
+            LogText_Output_InputField.text = LogString_InputField;
             ResizeInputField();
             UpdateLogInput("");
             GoToBottomOfLogContent();
-        });
-    }
-
-    //改行する
-    private void AddNewLine(int lineNum=1)
-    {
-        int n = 0;
-        for (int i = LogString_Output.Length-1; i >= 0; i--)
-        {
-            if (LogString_Output[i]=='\n') n++;
-            else if (LogString_Output[i] == ' ' || LogString_Output[i]=='<' || LogString_Output[i]=='/' || LogString_Output[i]=='c' || LogString_Output[i]=='o' || LogString_Output[i]=='l' || LogString_Output[i]=='r' || LogString_Output[i]=='>' ) continue;
-            else break;
-        }
-
-        string t = "";
-        for (int i = 0; i < lineNum-n; i++) t += "\n";
-
-        LogString_Output += t;
-
-        TotalManager.dispatcher.Invoke(() => {
-            LogText_Output.text = LogString_Output;
         });
     }
 
@@ -168,7 +126,9 @@ public partial class Output : MonoBehaviour
     //InputFieldの表示をTextに合わせる
     private void ResizeInputField()
     {
+        Canvas.ForceUpdateCanvases();
         LogText_Output_InputField_RectTransform.sizeDelta = LogText_Output_RectTransform.sizeDelta;
+        Canvas.ForceUpdateCanvases();
     }
 
     //inputの内容をLogにもリアルタイムで反映する
@@ -177,78 +137,42 @@ public partial class Output : MonoBehaviour
         LogText_Input.text = Command.NowReactiveProcessName + "> " + s;
     }
 
-    //Unity rich textに用いているタグを消す
-    private string SubstringTag(string s)
+    //色付きにする
+    public static string ColoringLine(string oldLine, Output.LogDisplayColor color)
     {
-        string t=s;
-        t = Regex.Replace(t, "<color=#........>","");
-        t = Regex.Replace(t, "</color>", "");
-        return t;
+        if (string.IsNullOrEmpty(oldLine))
+        {
+            return oldLine;
+        }
+
+        string colored = "";
+
+        //ターミナルの色付け https://qiita.com/PruneMazui/items/8a023347772620025ad6
+        //とりあえず実装しない
+        //foreach (string s in oldLine.Split("\[", '')) ;
+
+        //自分流の色付け
+        switch (color)
+        {
+            case Output.LogDisplayColor.Black:
+                colored = "<color=#000000ff>" + oldLine + "</color>";
+                break;
+            case Output.LogDisplayColor.White:
+                colored = "<color=#ffffffff>" + oldLine + "</color>";
+                break;
+            case Output.LogDisplayColor.Red:
+                colored = "<color=#ff0000ff>" + oldLine + "</color>";
+                break;
+            case Output.LogDisplayColor.Green:
+                colored = "<color=#00ff00ff>" + oldLine + "</color>";
+                break;
+            case Output.LogDisplayColor.Orange:
+                colored = "<color=#ffa500ff>" + oldLine + "</color>";
+                break;
+            default:
+                colored = oldLine;
+                break;
+        }
+        return colored;
     }
-
-    /*
-    Prefabを増やすことによって改行する場合
-    //ShowLog
-    public void Log_Show(string s, LogOption option)
-    {
-        if (s == "") return; //出力するものがある時のみ出力する
-        //Debug.Log(s);
-
-        //UIの操作などはMainThreadで行わなければならない
-        //Dispatcherを介すことでMainThreadで行う
-        TotalManager.dispatcher.Invoke(() => {
-            if (LogText_Inst_Text == null) { Debug.Log("NOT FOUND LOGTEXT INSTANCE"); return; }
-            switch (option.type)
-            {
-                case LogDisplayType.SingleLine:
-                    LogText_Inst_Text.text += s + " ";
-                    break;
-                case LogDisplayType.MultipleLine:
-                    LogText_Inst_Text.text += s + "\n";
-                    break;
-                default:
-                    break;
-            }
-            switch (option.color)
-            {
-                case LogDisplayColor.Black:
-                    LogText_Inst_Text.color = Color.black;
-                    break;
-                case LogDisplayColor.White:
-                    LogText_Inst_Text.color = Color.white;
-                    break;
-                case LogDisplayColor.Red:
-                    LogText_Inst_Text.color = Color.red;
-                    break;
-                case LogDisplayColor.Green:
-                    LogText_Inst_Text.color = Color.green;
-                    break;
-                default:
-                    break;
-            }
-        });
-    }
-
-
-    //AddNewLogText
-    public void AddNewLogText()
-    {
-        TotalManager.dispatcher.Invoke(() => {
-            if (LogText_Inst_Text == null)
-            {
-                GameObject gm = GameObject.Instantiate(LogText_Pref);
-                gm.transform.SetParent(LogOutputContent.transform, false);
-                LogText_Inst_Text = gm.GetComponent<Text>();
-            };
-
-            LogText_Inst_Text.text += "\n";
-        });
-    }
-
-
-    public void AddLogSizeControlEvent()
-    {
-        //LogSizeControlUI.OnPointerDown.
-    }
-    */
 }

@@ -20,7 +20,7 @@ public partial class Command
     //デフォルトの実行: Zsh or Bash のコマンドとして実行
     private void Execute_Default(string command, Output output)
     {
-        output.logDisplayLine = Output.LogDisplayLine.Multiple;
+
     }
 
 }

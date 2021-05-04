@@ -10,7 +10,7 @@ public partial class Command
 {
     public static StreamWriter SW;
     public static bool _IsInteractiveMode;
-
+    public Process proc;
 
     //REACTIVEにShを実行する。ログインシェル(リアクティブシェル)を実行
     //ExecuteShReactive: bin/bashなど、ログインシェル(リアクティブシェル)を実行する。
@@ -23,7 +23,7 @@ public partial class Command
         {
             try
             {
-                using (Process proc = new System.Diagnostics.Process())
+                using (proc = new System.Diagnostics.Process())
                 {
                     proc.StartInfo.FileName = ShellFileName; //command; // /bin/zshなどのShellFileName
                     proc.StartInfo.Arguments = "-l"; //"-l -i -s";

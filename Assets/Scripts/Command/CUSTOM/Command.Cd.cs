@@ -20,7 +20,7 @@ public partial class Command
     //実行
     private void Execute_Cd(string command,Output output)
     {
-        output.logDisplayLine = Output.LogDisplayLine.Single;
+
     }
 
 }

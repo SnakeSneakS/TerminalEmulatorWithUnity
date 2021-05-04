@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//Settings
+//Command.Settings
 public partial class Command : MonoBehaviour
 {
     public enum SettingName
