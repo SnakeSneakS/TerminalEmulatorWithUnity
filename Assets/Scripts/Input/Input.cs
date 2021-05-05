@@ -27,6 +27,6 @@ public partial class Input : MonoBehaviour
     public void EventWhenExecuteCommand()
     {
         UpdateHistLine();
-        UpdateHistPosRelative();
+        WhenExecuteCommand_InputCommand();
     }
 }

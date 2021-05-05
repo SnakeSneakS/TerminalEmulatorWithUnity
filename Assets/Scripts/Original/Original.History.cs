@@ -54,7 +54,7 @@ public partial class Original : MonoBehaviour
             {
                 //これ以上作れないため、一番最初を削除したことを警告
                 MyHistoryUnit[] new_histories = new MyHistoryUnit[HISTSIZE];
-                System.Array.Copy(histories, new_histories, HISTSIZE - 1);
+                System.Array.Copy(histories, 1, new_histories, 0, HISTSIZE - 1);
                 new_histories[writeHistLine] = new MyHistoryUnit();
                 new_histories[writeHistLine].Result_Uncolored += "保存できる履歴がマックスに達したため、最初の履歴が削除されました。\"Clear\"をクリックで履歴を削除できます、多分...\n";
                 new_histories[writeHistLine].Result_Colored += Output.ColoringLine("保存できる履歴がマックスに達したため、最初の履歴が削除されました。\"Clear\"をクリックで履歴を削除できます、多分...\n", Output.LogDisplayColor.Orange);

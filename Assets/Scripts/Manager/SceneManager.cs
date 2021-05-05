@@ -5,8 +5,9 @@ using UnityEngine.SceneManagement;
 
 public class SceneManager : MonoBehaviour
 {
-    public void LoadScene(string sceneName)
+    //Button onclick event
+    public void LoadScene(string SceneName)
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(SceneName);
     }
 }

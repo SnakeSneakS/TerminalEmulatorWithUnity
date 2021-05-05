@@ -4,10 +4,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 public partial class Input: MonoBehaviour
 {
-    int HistPosRelative = 0;
+    int HistPosRelative = 1;
+
+    private bool SuggestedPathBool=false;
+    private string[] SuggestedPathes;
+    private int SuggestedPathCompleteIndex=-1;
 
     //Start
     private void CommandEvent_Start()
@@ -16,6 +21,8 @@ public partial class Input: MonoBehaviour
         inputField.onValueChanged.AddListener((s) =>
         {
             output.UpdateLogInput(s);
+
+            if (SuggestedPathBool && !UnityEngine.Input.GetKey(KeyCode.Tab)) SuggestedPathBool = false; //Path予測リセット
         });
 
         //buttonクリックでコマンド実行
@@ -34,7 +41,7 @@ public partial class Input: MonoBehaviour
     private void UpdateEventWhenFocus()
     {
         if (!inputField.isFocused) return;
-
+        
         //コマンド実行
         if (UnityEngine.Input.GetKeyDown(KeyCode.Return))
         {
@@ -50,7 +57,7 @@ public partial class Input: MonoBehaviour
         //historyのコマンドを使う
         else if (UnityEngine.Input.GetKeyDown(KeyCode.UpArrow)) UseHistoryCommand(--HistPosRelative);
         else if (UnityEngine.Input.GetKeyDown(KeyCode.DownArrow)) UseHistoryCommand(++HistPosRelative);
-        //Ctrl+C いまいちわからんため、、、う〜ん、、、
+        //Ctrl+C いまいちわからんため、、、う〜ん、、、DEKINAI...
         /*
         else if(UnityEngine.Input.GetKey(KeyCode.LeftCommand) || UnityEngine.Input.GetKey(KeyCode.RightControl))
         {
@@ -59,11 +66,10 @@ public partial class Input: MonoBehaviour
         */
     }
 
-
-    //Commandが実行された時に、HistPosRelativeを変更する
-    private void UpdateHistPosRelative()
+    
+    private void WhenExecuteCommand_InputCommand()
     {
-        HistPosRelative = 0;
+        HistPosRelative = 1; //Commandが実行された時に、HistPosRelativeを変更する
     }
 
     //コマンド実行
@@ -77,59 +83,99 @@ public partial class Input: MonoBehaviour
         output.UpdateLogInput(inputField.text);
     }
 
-    //コマンドの補完 とりあえずはファイルのみ
+    //コマンドの補完 とりあえずはpathのみ
     private void CompleteCommand()
     {
-        //コマンドを補完する。もしかしたら、/.zcompdump
-        string[] pathes = SuggestPathes(inputField.text);
-        output.myHistory.SetMyWarning("PATHの予想先");
-        foreach (var p in pathes)
-        {
-            output.myHistory.SetMyWarning("- "+p);
-        }
-        output.myHistory.setDisplayLineToWriteLine();
-        output.Log_show(output.myHistory.displayHistLine);
-        UnityEngine.Debug.Log("ALL FILES END");
-    }
-    //inputのpathを書き換える
-    private void UpdatePathOfInputField(string path)
-    {
-        while (inputField.text.Length > 0 && inputField.text[inputField.text.Length - 1] == ' ') inputField.text = inputField.text.Substring(0, inputField.text.Length - 2);
+        string input_path = inputField.text.Substring(inputField.text.LastIndexOf(' ') + 1);
 
-        int last = inputField.text.LastIndexOf(' ');
-        if (last == -1) inputField.text = path;
-        else inputField.text = inputField.text.Substring(0, last) + path;
-    }
-    //inputからpathesを予測する。Tabで実行
-    private string[] SuggestPathes(string input)
-    {
-        while (input.Length > 0 && input[input.Length - 1] == ' ') input = input.Substring(0, input.Length - 2);
+        //コマンドを補完する。もしかしたら、/.zcompdumpだけど、タブシグナルの送り方がわからないため自作する
+        if (!SuggestedPathBool) //まだ検索していないパスの場合、
+        {
+            SuggestedPathBool = true; SuggestedPathCompleteIndex = -1;
+
+            SuggestedPathes = SuggestPathes(input_path);
+            output.myHistory.SetMyWarning("~ PATHの予想先 ~");
+            for (int i = 0; i < SuggestedPathes.Length; i++) output.myHistory.SetMyWarning(" " + SuggestedPathes[i]);
+            output.myHistory.SetMyWarning("\n");
+
+            //1つだけの場合、それを用いる+予測変換をリセット
+            if (SuggestedPathes.Length == 1)
+            {
+                SuggestedPathBool = false;
+                inputField.text = inputField.text.Substring(0, inputField.text.LastIndexOf(' ') + 1) + SuggestedPathes[0];
+            }
+
+            output.myHistory.setDisplayLineToWriteLine();
+            output.Log_show(output.myHistory.displayHistLine);
+        }
+        else //検索したことのあるパスの場合、
+        {
+            SuggestedPathCompleteIndex++;
+            if (SuggestedPathCompleteIndex >= SuggestedPathes.Length) SuggestedPathCompleteIndex = 0;
+            string newPath = SuggestedPathes[SuggestedPathCompleteIndex];
+            if (newPath[newPath.Length-1] == '/') newPath = newPath.Substring(0, newPath.Length - 1); //pathの最後の"/"を取り除く
+            inputField.text = inputField.text.Substring(0, inputField.text.LastIndexOf(' ') + 1) + newPath;
+        }
         
-        int last = input.LastIndexOf(' ');
-        string input_path = input.Substring(last + 1);
-        last = input_path.LastIndexOf('/');
+    }
+    
+    //inputからpathesを予測する。Tabで実行
+    private string[] SuggestPathes(string input_path)
+    {
+        //while (input.Length > 0 && input[input.Length - 1] == ' ') input = input.Substring(0, input.Length - 2);
+        if (string.IsNullOrEmpty(input_path)) return new string[]{ };
+        
+        int last = input_path.LastIndexOf('/');
 
         string[] pathes;
         if (last == -1)
         {
-            //if (string.IsNullOrEmpty(input_path)) { return new string[0]; }
             string[] files = Directory.GetFiles(Command.WorkingDirectory, input_path + "*");
+            files = GetRelativePathes((Command.WorkingDirectory[Command.WorkingDirectory.Length - 1] == '/') ? Command.WorkingDirectory : Command.WorkingDirectory + "/", files);
             string[] directories = Directory.GetDirectories(Command.WorkingDirectory, input_path + "*");
+            directories = GetRelativePathes((Command.WorkingDirectory[Command.WorkingDirectory.Length - 1] == '/') ? Command.WorkingDirectory : Command.WorkingDirectory + "/", directories);
+            for (int i = 0; i < directories.Length; i++) directories[i] += "/";
+
             pathes = new string[files.Length + directories.Length];
             files.CopyTo(pathes, 0);
             directories.CopyTo(pathes, files.Length);
+            Array.Sort(pathes);
+
             return pathes;
         }
         else
         {
-            string path = Path.Combine( Command.WorkingDirectory, input_path.Substring(0, last) );
-            string[] files = Directory.GetFiles(path, (last == input_path.Length - 1) ? "*" : path.Substring(last + 1) + "*");
-            string[] directories = Directory.GetDirectories(path, (last == input_path.Length - 1) ? "*" : path.Substring(last + 1) + "*");
+            string path = Path.GetFullPath( Path.Combine( Command.WorkingDirectory , input_path.Substring(0, last+1) ) );
+            //UnityEngine.Debug.Log(path);
+            //UnityEngine.Debug.Log(input_path.Substring(last+1) + "*");
+            if (!Directory.Exists(path)) return new string[] { };
+            string[] files = Directory.GetFiles(path, input_path.Substring(last + 1) + "*");
+            files = GetRelativePathes((Command.WorkingDirectory[Command.WorkingDirectory.Length - 1] == '/') ? Command.WorkingDirectory : Command.WorkingDirectory + "/", files);
+            string[] directories = Directory.GetDirectories(path, input_path.Substring(last + 1) + "*");
+            directories = GetRelativePathes((Command.WorkingDirectory[Command.WorkingDirectory.Length - 1] == '/') ? Command.WorkingDirectory : Command.WorkingDirectory + "/", directories);
+            for (int i = 0; i < directories.Length; i++) directories[i] += "/";
+
             pathes = new string[files.Length + directories.Length];
             files.CopyTo(pathes, 0);
             directories.CopyTo(pathes, files.Length);
+            Array.Sort(pathes);
+
             return pathes;
         }
+    }
+    private string[] GetRelativePathes(string from,string[] to)
+    {
+        string[] relative = new string[to.Length];
+
+        Uri fromUri = new Uri(from);
+        for (int i = 0; i < to.Length; i++)
+        {
+            Uri toUri = new Uri(to[i]);
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            relative[i] = relativeUri.ToString();
+            //UnityEngine.Debug.Log(from + " + " + to[i] + " => " + relative[i]);
+        }
+        return relative; 
     }
 
     //historyの1つ上のコマンド

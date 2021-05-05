@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 
-//Sh
+//LoginShell
 public partial class Command
 {
     public static StreamWriter SW;
@@ -125,7 +125,7 @@ public partial class Command
                 if (e == null) return;
                 string result = "[Error!!] " + e.Message;
                 UnityEngine.Debug.LogError(result);
-                output.Log_error(result);
+                //output.Log_error(result);
                 return;
             }
         }));

@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 //Output_Log(MyHistory)
 public partial class Output : MonoBehaviour
 {
+    [SerializeField] GameObject LogPanel;
+
     [SerializeField] ScrollRect LogOutputAreaScrollView;
     [SerializeField] GameObject LogOutputContent;
     [SerializeField] GameObject LogText_Pref;
@@ -44,7 +46,7 @@ public partial class Output : MonoBehaviour
     {
         if (string.IsNullOrEmpty(s)) return;
         myHistory.NewHistLine();
-        myHistory.SetCommand(Command.NowReactiveProcessName+"> "+s);
+        myHistory.SetCommand(s);
         UnityEngine.Debug.Log("Command: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
@@ -70,6 +72,15 @@ public partial class Output : MonoBehaviour
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
     }
+    //warn表示
+    public void Log_warn(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return;
+        myHistory.SetMyWarning(s);
+        UnityEngine.Debug.Log("WARN: " + s);
+        myHistory.setDisplayLineToWriteLine();
+        Log_show(myHistory.displayHistLine);
+    }
     //終了
     /*
     public void Log_end(string s)
@@ -81,6 +92,7 @@ public partial class Output : MonoBehaviour
     //log表示
     public void Log_show(int displayLogLine)
     {
+        UnityEngine.Debug.Log("HISTLINE: "+displayLogLine);
         if(displayLogLine<0 || displayLogLine >= myHistory.histories.Length)
         {
             UnityEngine.Debug.LogError("outside of histories");
@@ -95,8 +107,8 @@ public partial class Output : MonoBehaviour
             return;
         }
 
-        LogString_InputField = myHistory.histories[myHistory.displayHistLine].Command_Uncolored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Uncolored;
-        LogString_Output = myHistory.histories[myHistory.displayHistLine].Command_Colored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Colored;
+        LogString_InputField = ">"+myHistory.histories[myHistory.displayHistLine].Command_Uncolored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Uncolored;
+        LogString_Output = ColoringLine(">", LogDisplayColor.Green) + myHistory.histories[myHistory.displayHistLine].Command_Colored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Colored;
 
         LogText_Update();
     }
@@ -174,5 +186,12 @@ public partial class Output : MonoBehaviour
                 break;
         }
         return colored;
+    }
+
+
+    //LogPanelの表示or非表示
+    public void DisplayLogPanelFromToggler(UnityEngine.UI.Toggle t)
+    {
+        LogPanel.SetActive(t.isOn);
     }
 }

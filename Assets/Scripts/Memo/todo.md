@@ -7,7 +7,7 @@
 - echo $PS1の設定を変えることで、自分の表示名を隠す。
     - default: %n@%m %1~ %#
 - mesh cannnot more than 65000? => stringの行数で制御すれば良いのでは? => コマンド毎にまとめた方が良いのでは?
-- exitせずに終わった時のプロセス終了処理
+- exitせずに終わった時のプロセスどうなってる？きちんと終了されてる？
 
 # ???
 - zsh -l VS zsh -i
@@ -15,7 +15,6 @@
 
 # TODOリスト
 
-- FILE existsなどでチェック
 - 改行の恐らく「canvasforceupdate」のタイミングがあってない
 - 「Shell built-in command」など「zsh -l」でできていない?コマンドの実装、またはできない場合はできないのメッセージ
     - history, export, など
@@ -37,6 +36,7 @@
 - ターミナルへのより深い理解(シェル実行の仕組み、ttyとは？、lsの時のあの見やすさはどうやって、など！)
 - ttyで実行とかってできるのかな？
 - mac,linux,windowsでテスト
+- 1行ごとではなく、StandardOutputが来る毎に文字表示させたい
 
 
 # 余裕がありまくったらやる
