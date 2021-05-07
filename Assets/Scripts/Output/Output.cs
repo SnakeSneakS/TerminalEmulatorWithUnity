@@ -7,4 +7,9 @@ using UnityEngine.UI;
 public partial class Output : MonoBehaviour
 {
     [SerializeField] public Input input;
+
+    private void Awake()
+    {
+        GirlDialog_Awake();
+    }
 }

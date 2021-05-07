@@ -64,7 +64,8 @@ public partial class Command
                     SW = proc.StandardInput;
                     if (SW.BaseStream.CanWrite)
                     {
-                        SW.WriteLine("echo \"PROCESS START...\" ");
+                        SW.WriteLine("echo \"PROCESS START...\" \n\n");
+                        SW.WriteLine("echo \"Enter \'exit\' to End PROCESS...\" ");
                     }
                     proc.WaitForExit();
 

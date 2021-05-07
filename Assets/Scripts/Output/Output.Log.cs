@@ -52,6 +52,8 @@ public partial class Output : MonoBehaviour
         Log_show(myHistory.displayHistLine);
 
         input.EventWhenExecuteCommand();
+
+        GirlDialog_Command();
     }
 
     //結果表示
@@ -62,6 +64,8 @@ public partial class Output : MonoBehaviour
         UnityEngine.Debug.Log("SUCCESS: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
+
+        GirlDialog_Success();
     }
     //error表示
     public void Log_error(string s)
@@ -71,6 +75,8 @@ public partial class Output : MonoBehaviour
         UnityEngine.Debug.Log("ERROR: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
+
+        GirlDialog_Error();
     }
     //warn表示
     public void Log_warn(string s)
@@ -81,18 +87,11 @@ public partial class Output : MonoBehaviour
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
     }
-    //終了
-    /*
-    public void Log_end(string s)
-    {
-        
-    }
-    */
 
     //log表示
     public void Log_show(int displayLogLine)
     {
-        UnityEngine.Debug.Log("HISTLINE: "+displayLogLine);
+        //UnityEngine.Debug.Log("HISTLINE: "+displayLogLine);
         if(displayLogLine<0 || displayLogLine >= myHistory.histories.Length)
         {
             UnityEngine.Debug.LogError("outside of histories");
@@ -194,4 +193,5 @@ public partial class Output : MonoBehaviour
     {
         LogPanel.SetActive(t.isOn);
     }
+
 }

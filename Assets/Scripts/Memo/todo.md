@@ -1,3 +1,8 @@
+- 会話スキップ時の遅延を作る
+- 2つめ以降が何故か表示されていない
+
+
+
 # What is this?
 
 - C# Console app
@@ -14,17 +19,18 @@
 - -iにすべき!!その場合、出力を「途中でも表示」にすべき!! (program の scanfなどが効かないため)(もしくは、PTYをgoでやる)
 
 # TODOリスト
-
+- アバター追加＆表情＆背景の色、history
 - 改行の恐らく「canvasforceupdate」のタイミングがあってない
 - 「Shell built-in command」など「zsh -l」でできていない?コマンドの実装、またはできない場合はできないのメッセージ
     - history, export, など
-- 「mysql -u root -p」の「Enter your password...」などはどうやって表示すれば良いのだろう。。。=>DataReceivedEventは改行検知。そのため改行ない場合の「入力待ち状態」においてRead&Outputしてやる
+- 「mysql -u root -p」の「Enter your password...」などはどうやって表示すれば良いのだろう。。。=>DataReceivedEventは改行(など)検知。そのため改行ない場合の「入力待ち状態」においてRead&Outputしてやる
 - \m81などの色付け, bboollddなどのbold, 
 - historyが上手くいかない。man historyで確認してみたら、、、うーん、、、、、＜＝ターミあるで行っているboldなどのマークアップを置換すべし
 - フォルダ名補完はC#でやろう？ 
 
 # やりたいこと
 
+- ツンデレ音声など入れたい
 - タブで入力補完(zcompdump?)
 - ギャルゲー風（イラスト or 3Dモデル）
 - cdに対してファイル一覧表示などのコマンド補助
@@ -47,6 +53,7 @@
 - フォルダ構成など整理
 - zcompdumpでタブ補完している？？？
 - ctrl+c(interrupt process)nados
+- どうやってsignalを送ったらいいのか? goでやるか??
 
 # sudo -l
 
