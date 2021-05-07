@@ -6,20 +6,24 @@ using UnityEngine.UI;
 public class SettingSceneController : MonoBehaviour
 {
 
-    [SerializeField] InputField ShFileName;
+    [SerializeField] InputField ShellFileName;
+    [SerializeField] InputField ShellArguments;
     [SerializeField] InputField WorkingDirectory;
+    
 
     private void Awake()
     {
-        ShFileName.text = PlayerPrefs.GetString( Command.SettingName.ShFileName.ToString() );
+        ShellFileName.text = PlayerPrefs.GetString( Command.SettingName.ShellFileName.ToString() );
+        ShellArguments.text = PlayerPrefs.GetString(Command.SettingName.ShellArguments.ToString());
         WorkingDirectory.text = PlayerPrefs.GetString(Command.SettingName.WorkingDirectory.ToString());
-
+        
         SetInputEvents();
     }
 
     private void SetInputEvents()
     {
-        ShFileName.onEndEdit.AddListener(delegate { PlayerPrefs.SetString(Command.SettingName.ShFileName.ToString(), ShFileName.text); });
+        ShellFileName.onEndEdit.AddListener(delegate { PlayerPrefs.SetString(Command.SettingName.ShellFileName.ToString(), ShellFileName.text); });
+        ShellArguments.onEndEdit.AddListener(delegate { PlayerPrefs.SetString(Command.SettingName.ShellArguments.ToString(), ShellArguments.text); });
         WorkingDirectory.onEndEdit.AddListener(delegate { PlayerPrefs.SetString(Command.SettingName.WorkingDirectory.ToString(), WorkingDirectory.text); });
     }
 

@@ -55,12 +55,12 @@ public partial class Output: MonoBehaviour
     public class TerminalChan: MonoBehaviour
     {
         public static string MyName = "You";
-        public static string TerminalChanName = "TerminalChanVersionXXXXXXXXXXXXX";
-        private static int CommandLengthMax=30;
+        public static string TerminalChanName = "TerminalChan";
+        private static int CommandLengthMax=25;
         private static int NameLengthMax=15;
         private static int ResultLineLengthMax=4;
         private static float ShowThroughWaitTime = 0.05f; //一文字ずつ表示する際の、一文字表示にかかる時間
-        private static float ShowThroughAutoNextTime = 3.0f; //表示し終わった際の、次ページへ自動で移る時間(特に4行以上)
+        private static float ShowThroughAutoNextTime = 1.0f; //表示し終わった際の、次ページへ自動で移る時間(特に4行以上)
         private static float ShowNextWaitTime = 0.5f; //一括表示した後、次ページ表示にするまでの禁止時間。連続クリックにより必要以上に移動することを防ぐ
 
         public static string DisplayCommand="";
@@ -94,11 +94,11 @@ public partial class Output: MonoBehaviour
 
             DisplayCommand = myHistory.histories[myHistory.writeHistLine].Command_Uncolored;
             if (DisplayCommand.Length > CommandLengthMax) DisplayCommand = DisplayCommand.Substring(0, CommandLengthMax)+"...";
-            DisplayCommand = ColoringLine(DisplayCommand,LogDisplayColor.Green);
-            UpdateText(output.DialogDisplayCommandText, DisplayCommand);
+            //DisplayCommand = ColoringLine(DisplayCommand,LogDisplayColor.Green);
+            UpdateText(output.DialogDisplayCommandText, DisplayCommand,true);
 
             if (DisplayName.Length > NameLengthMax) DisplayName = DisplayName.Substring(0, NameLengthMax) + "...";
-            UpdateText(output.DialogDisplayNameText, DisplayName);
+            UpdateText(output.DialogDisplayNameText, DisplayName,false);
 
             DisplayResult = "";
             StopAllCoroutines();
@@ -128,7 +128,7 @@ public partial class Output: MonoBehaviour
                     ShowResultOnce();
                 });
 
-                StartCoroutine(ForbitShowNextForWhile());
+                StartCoroutine(ForbitShowNextForWhile(false));
             }
             //次へ移れない場合、映らない
             else if (!IsAbleToShowNext)
@@ -178,7 +178,7 @@ public partial class Output: MonoBehaviour
                 //UnityEngine.Debug.Log("text: "+text); UnityEngine.Debug.Log("tag: "+tag);
                 for (int j = 0; j < text.Length; j++)
                 {
-                    if (!IsShowThroughing) break; 
+                    if (!IsShowThroughing) yield break; 
                     output.DialogDisplayResultText.text = tempDisplayResult + tag + text.Substring(0, j+1) + "</color>" ;
                     //UnityEngine.Debug.Log("DIALOG RESULT as showThrough: " + tempDisplayResult + tag + text.Substring(0, j + 1) + "</color>");
                     yield return new WaitForSeconds(ShowThroughWaitTime);
@@ -189,14 +189,9 @@ public partial class Output: MonoBehaviour
                 TagGroups= Regex.Matches(DisplayResult, "<color=#........>.*</color>");
             }
 
-            StartCoroutine(ForbitShowNextForWhile());
+            if(TagGroups.Count!=0) StartCoroutine(ForbitShowNextForWhile(true));
             IsShowThroughing = false;
             yield break;
-        }
-        //コマンドを表示
-        public void SetDisplayCommand()
-        {
-            DisplayCommand = ColoringLine(">", LogDisplayColor.Green) + myHistory.histories[myHistory.writeHistLine].Command_Colored;
         }
         //同じpageとしてDisplayResultを設定
         public void SetDisplayResultNow()
@@ -233,7 +228,8 @@ public partial class Output: MonoBehaviour
             string[] results = myHistory.histories[myHistory.writeHistLine].Result_Colored.Split('\n');
 
             //resultのうち表示する最後の行(最後の行がIsNullOrEmptyの場合、それは最後の行とせずに１行戻る)
-            int last = (string.IsNullOrEmpty(results[results.Length - 1]) ? results.Length - 2 : results.Length-1);
+            //int last = (string.IsNullOrEmpty(results[results.Length - 1]) ? results.Length - 2 : results.Length-1);
+            int last = results.Length - 1;
 
             //既に最後まで表示していた場合はDisplayResultを変更しない
             //if (DisplayResult_LastLineIndex == last) return;
@@ -261,19 +257,30 @@ public partial class Output: MonoBehaviour
             }
         }
         //Textのtをsに変える。メインスレッドで実行
-        public void UpdateText(Text t,string s)
+        public void UpdateText(Text t,string s, bool isForceUpdate=false)
         {
             TotalManager.dispatcher.Invoke(() =>
             {
                 t.text = s;
+                if (isForceUpdate)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    t.enabled = false;
+                    t.enabled = true; //一度消して付けないと、ContentSizeFilterが働かない
+                }
             });
         }
-        //一定時間次へ移るのを禁止する
-        private IEnumerator ForbitShowNextForWhile()
+        //一定時間次へ移るのを禁止する. その後に次に移る場合show=trueにする
+        private IEnumerator ForbitShowNextForWhile(bool show)
         {
             IsAbleToShowNext = false;
             yield return new WaitForSeconds(ShowNextWaitTime);
             IsAbleToShowNext = true;
+            if (show)
+            {
+                yield return new WaitForSeconds(ShowThroughAutoNextTime);
+                ShowNext();
+            }
             yield break;
         }
 
@@ -287,16 +294,25 @@ public partial class Output: MonoBehaviour
             public static int koukando_ResultSuccess = 1;
             public static int koukando_ResultError = -4;
 
+            public static Dictionary<ReactionType, string[]> reactionFaceStrings = new Dictionary<ReactionType, string[]>()
+            {
+                {ReactionType.Sad, new string[]{ "", "( T-T) ｳﾙｳﾙ","。゜(つω｀）゜。", ">_<" } },
+                {ReactionType.Angry, new string[]{ "(*･ε･*)ﾑｰ", "＼(○｀ε´○)ｺﾗ!ｺﾗ!", "ヽ(｀Д´#)ﾉ", "╰(◣﹏◢)╯", "(๑˘･з･˘)" } },
+                {ReactionType.Tsun, new string[]{ "(*_*;;", "(-_-;" } },
+                {ReactionType.Idle, new string[]{"(^_^)", "(^Ｏ^)" } },
+                {ReactionType.Happy, new string[]{ "ヾ(*´∀｀*)ﾉ", "(*´∇`*)", "(*^o^*)", "(〃▽〃)", "( *¯ ꒳¯*)" } },
+                {ReactionType.Dere, new string[]{ "|_-。) ポッ", "（///ω///）", "【照//∀//】","(//∇//) テレテレ","（*´ｪ｀*）ﾎﾟｯ" } },
+            };
+
             //数字は境値の好感度
             public enum ReactionType
             {
-                Sad = -20,  // >_<
-                Tsun = -10, //(๑˘･з･˘)
-                Angry = -1, //
+                Sad = -20,  
+                Angry = -10, 
+                Tsun = -1, 
                 Idle =0,
-                Happy=5, //( *¯ ꒳¯*)
-                Tsundere = 20, //
-                Dere =30, //
+                Happy=5, 
+                Dere =20, 
             }
 
             //constructor

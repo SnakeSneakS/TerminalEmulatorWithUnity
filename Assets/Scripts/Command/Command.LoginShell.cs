@@ -26,7 +26,7 @@ public partial class Command
                 using (proc = new System.Diagnostics.Process())
                 {
                     proc.StartInfo.FileName = ShellFileName; //command; // /bin/zshなどのShellFileName
-                    proc.StartInfo.Arguments = "-l"; //"-l -i -s";
+                    proc.StartInfo.Arguments = ShellArguments; //"-l -i -s";
                     proc.StartInfo.WorkingDirectory = WorkingDirectory;
                     proc.StartInfo.CreateNoWindow = true;
                     proc.StartInfo.UseShellExecute = false;

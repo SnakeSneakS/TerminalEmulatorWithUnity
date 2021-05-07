@@ -15,7 +15,7 @@ public partial class Output : MonoBehaviour
     [SerializeField] GameObject LogText_Pref;
 
     private string LogString_Output="";
-    private string LogString_InputField = "";
+    private string LogString_Output_InputField = "";
 
     [SerializeField] private InputField LogText_Output_InputField; //コピーや選択する用
     [SerializeField] private RectTransform LogText_Output_InputField_RectTransform; //リサイズ用
@@ -59,7 +59,7 @@ public partial class Output : MonoBehaviour
     //結果表示
     public void Log_success(string s)
     {
-        if (string.IsNullOrEmpty(s)) return;
+        //if (string.IsNullOrEmpty(s)) return;
         myHistory.SetResultSuccess(s);
         UnityEngine.Debug.Log("SUCCESS: " + s);
         myHistory.setDisplayLineToWriteLine();
@@ -70,7 +70,7 @@ public partial class Output : MonoBehaviour
     //error表示
     public void Log_error(string s)
     {
-        if (string.IsNullOrEmpty(s)) return;
+        //if (string.IsNullOrEmpty(s)) return;
         myHistory.SetResultError(s);
         UnityEngine.Debug.Log("ERROR: " + s);
         myHistory.setDisplayLineToWriteLine();
@@ -81,7 +81,7 @@ public partial class Output : MonoBehaviour
     //warn表示
     public void Log_warn(string s)
     {
-        if (string.IsNullOrEmpty(s)) return;
+        //if (string.IsNullOrEmpty(s)) return;
         myHistory.SetMyWarning(s);
         UnityEngine.Debug.Log("WARN: " + s);
         myHistory.setDisplayLineToWriteLine();
@@ -105,8 +105,8 @@ public partial class Output : MonoBehaviour
             Debug.LogError("NOT FOUND LOGTEXT FOR DISPLAY!!\n");
             return;
         }
-
-        LogString_InputField = ">"+myHistory.histories[myHistory.displayHistLine].Command_Uncolored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Uncolored;
+        
+        LogString_Output_InputField = ">"+myHistory.histories[myHistory.displayHistLine].Command_Uncolored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Uncolored;
         LogString_Output = ColoringLine(">", LogDisplayColor.Green) + myHistory.histories[myHistory.displayHistLine].Command_Colored + "\n" + myHistory.histories[myHistory.displayHistLine].Result_Colored;
 
         LogText_Update();
@@ -118,11 +118,15 @@ public partial class Output : MonoBehaviour
     public void LogText_Update()
     {
         TotalManager.dispatcher.Invoke(() => {
+            //UnityEngine.Debug.Log("Colored: "+LogString_Output);
+            //UnityEngine.Debug.Log("Uncolored: "+LogString_Output_InputField);
+
             LogText_Output.text = LogString_Output;
-            LogText_Output_InputField.text = LogString_InputField;
+            LogText_Output_InputField.text = LogString_Output_InputField;
             ResizeInputField();
             UpdateLogInput("");
-            GoToBottomOfLogContent();
+
+            GoToBottomOfLogContent(); //各HistLineを表示するようになったためこれ無しでも良い? HistLineではなく全てを表示する場合、Verticesが多すぎて表示できなくなる
         });
     }
 
@@ -138,6 +142,8 @@ public partial class Output : MonoBehaviour
     private void ResizeInputField()
     {
         Canvas.ForceUpdateCanvases();
+        UnityEngine.Debug.Log("SIZEDELTA: " +LogText_Output_RectTransform.sizeDelta+ ", "+LogText_Output_InputField_RectTransform.sizeDelta);
+        //LogText_Output.enabled = false; LogText_Output.enabled = true; //reflect ContentSizeFilter
         LogText_Output_InputField_RectTransform.sizeDelta = LogText_Output_RectTransform.sizeDelta;
         Canvas.ForceUpdateCanvases();
     }
@@ -192,6 +198,7 @@ public partial class Output : MonoBehaviour
     public void DisplayLogPanelFromToggler(UnityEngine.UI.Toggle t)
     {
         LogPanel.SetActive(t.isOn);
+        Log_show(myHistory.displayHistLine);
     }
 
 }

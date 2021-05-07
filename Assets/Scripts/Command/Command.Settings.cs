@@ -8,12 +8,14 @@ public partial class Command : MonoBehaviour
 {
     public enum SettingName
     {
-        ShFileName,
+        ShellFileName,
+        ShellArguments,
         WorkingDirectory,
         //PATH,
     }
 
     public static string ShellFileName = ""; //"/bin/zsh"; "/bin/bash";
+    public static string ShellArguments = ""; //"-l" "-i" "-c"; Set default in Awake()
     public static string WorkingDirectory="";
     //public static string PATH = "";
 
@@ -29,15 +31,20 @@ public partial class Command : MonoBehaviour
         GetLocalDatas();
         command_handlers = NewCommandHandler(output);
 
-        if (ShellFileName == "")
+        if ( string.IsNullOrEmpty(ShellFileName) )
         {
             ShellFileName = Environment.GetEnvironmentVariable("SHELL", EnvironmentVariableTarget.Process); //"/bin/bash";
             SetShellFileName(ShellFileName);
         }
-        if (WorkingDirectory == "")
+        if ( string.IsNullOrEmpty(WorkingDirectory) )
         {
             WorkingDirectory = Environment.CurrentDirectory;
             SetWorkingDirectory(WorkingDirectory);
+        }
+        if (string.IsNullOrEmpty(ShellArguments))
+        {
+            ShellArguments = "-l";
+            SetShellArgumentsy(ShellArguments);
         }
 
     }
@@ -51,7 +58,8 @@ public partial class Command : MonoBehaviour
     //PlayerPrefsからデータを読み取る
     private void GetLocalDatas()
     {
-        ShellFileName = PlayerPrefs.GetString( SettingName.ShFileName.ToString() );
+        ShellFileName = PlayerPrefs.GetString( SettingName.ShellFileName.ToString() );
+        ShellArguments= PlayerPrefs.GetString(SettingName.ShellArguments.ToString());
         WorkingDirectory = PlayerPrefs.GetString( SettingName.WorkingDirectory.ToString() );
     }
 
@@ -60,13 +68,14 @@ public partial class Command : MonoBehaviour
     {
         output.Log_execute("SETTINGS" );
         output.Log_success("ShellFileName: "+ShellFileName );
+        output.Log_success("ShellArguments: " + ShellArguments);
         output.Log_success("WorkingDirectory: " + WorkingDirectory );
     }
 
     //PlayerPrefsにShellFileNameを保存する
     public void SetShellFileName(string s)
     {
-        PlayerPrefs.SetString( SettingName.ShFileName.ToString(), s);
+        PlayerPrefs.SetString( SettingName.ShellFileName.ToString(), s);
     }
 
     /*
@@ -82,7 +91,12 @@ public partial class Command : MonoBehaviour
     {
         PlayerPrefs.SetString( SettingName.WorkingDirectory.ToString(), s);
     }
+    //PlayerPrefsにShellArgumentsを保存する
+    public void SetShellArgumentsy(string s)
+    {
+        PlayerPrefs.SetString(SettingName.ShellArguments.ToString(), s);
+    }
 
 
-    
+
 }

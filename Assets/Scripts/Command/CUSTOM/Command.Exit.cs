@@ -20,7 +20,7 @@ public partial class Command
     //実行
     private void Execute_Exit(string command, Output output)
     {
-        proc.Kill();
+        if(proc!=null) proc.Kill();
     }
 
 }
