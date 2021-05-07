@@ -47,7 +47,7 @@ public partial class Command
                         _IsInteractiveMode = false;
                         _IsExecuting = false;
                         NowReactiveProcessName = "";
-                        output.Log_success("Process end..." + ((Process)sender).Id.ToString());
+                        output.WhenSuccess("Process end..." + ((Process)sender).Id.ToString());
                         SW.WriteLine("exit");
                         SW.Close();
                     });
@@ -113,7 +113,7 @@ public partial class Command
                     _IsInteractiveMode = false;
                     _IsExecuting = false;
                     NowReactiveProcessName = "";
-                    output.Log_success("Process end...");
+                    output.WhenSuccess("Process end...");
                     SW.WriteLine("exit");
                     SW.Close();
                     */
@@ -126,7 +126,7 @@ public partial class Command
                 if (e == null) return;
                 string result = "[Error!!] " + e.Message;
                 UnityEngine.Debug.LogError(result);
-                //output.Log_error(result);
+                //output.WhenError(result);
                 return;
             }
         }));
@@ -155,7 +155,7 @@ public partial class Command
     {
         return new DataReceivedEventHandler((s, e) =>
         {
-            output.Log_success(e.Data);
+            output.WhenSuccess(e.Data);
         });
     }
 
@@ -164,7 +164,7 @@ public partial class Command
     {
         return new DataReceivedEventHandler((s, e) =>
         {
-            output.Log_error(e.Data);
+            output.WhenError(e.Data);
         });
     }
 

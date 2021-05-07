@@ -32,17 +32,17 @@ public partial class Command
             if (Directory.Exists(newPath))
             {
                 Command.WorkingDirectory = newPath;
-                output.Log_success("Working directory: " + newPath);
+                output.WhenSuccess("Working directory: " + newPath);
             }
             else
             {
-                output.Log_warn("Not found path: \"" + newPath + "\"");
-                output.Log_error("今後、TabによるPath予測はできない可能性があります");
+                output.WhenWarn("Not found path: \"" + newPath + "\"");
+                output.WhenError("今後、TabによるPath予測はできない可能性があります");
             }
         }
         else
         {
-            output.Log_warn("Error: Command \"cd\" needs argument");
+            output.WhenWarn("Error: Command \"cd\" needs argument");
         }
     }
 

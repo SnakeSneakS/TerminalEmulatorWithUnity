@@ -15,7 +15,7 @@ public partial class Command: MonoBehaviour
         Handler handler;
 
         //実行コマンドを出力
-        output.Log_execute(command);
+        output.WhenExecute(command);
 
         if(Command._IsInteractiveMode) //対話モードの場合、実行中のプロセス(zshなど)のStreamWriterへ書き込む
         {
@@ -47,7 +47,7 @@ public partial class Command: MonoBehaviour
         else //対話モードではない場合、LOGIN SHELL のみ可能にする
         {
             if (command == "LOGIN") Execute_LoginShell(command, output);
-            else output.Log_error("Enter \"LOGIN\" to Start...");
+            else output.WhenError("Enter \"LOGIN\" to Start...");
         }
 
     }

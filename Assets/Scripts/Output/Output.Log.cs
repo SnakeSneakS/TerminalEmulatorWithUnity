@@ -24,7 +24,6 @@ public partial class Output : MonoBehaviour
     [SerializeField] private Text LogText_Input; //入力表示用
 
     
-    public Original.MyHistory myHistory = new Original.MyHistory(50); //Original History にLogを保存する
     
     //現在はMultipleのみにしている
     public enum LogDisplayLine
@@ -50,10 +49,6 @@ public partial class Output : MonoBehaviour
         UnityEngine.Debug.Log("Command: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
-
-        input.EventWhenExecuteCommand();
-
-        GirlDialog_Command();
     }
 
     //結果表示
@@ -64,8 +59,6 @@ public partial class Output : MonoBehaviour
         UnityEngine.Debug.Log("SUCCESS: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
-
-        GirlDialog_Success();
     }
     //error表示
     public void Log_error(string s)
@@ -75,8 +68,6 @@ public partial class Output : MonoBehaviour
         UnityEngine.Debug.Log("ERROR: " + s);
         myHistory.setDisplayLineToWriteLine();
         Log_show(myHistory.displayHistLine);
-
-        GirlDialog_Error();
     }
     //warn表示
     public void Log_warn(string s)
@@ -142,8 +133,8 @@ public partial class Output : MonoBehaviour
     private void ResizeInputField()
     {
         Canvas.ForceUpdateCanvases();
-        UnityEngine.Debug.Log("SIZEDELTA: " +LogText_Output_RectTransform.sizeDelta+ ", "+LogText_Output_InputField_RectTransform.sizeDelta);
-        //LogText_Output.enabled = false; LogText_Output.enabled = true; //reflect ContentSizeFilter
+        //UnityEngine.Debug.Log("SIZEDELTA: " +LogText_Output_RectTransform.sizeDelta+ ", "+LogText_Output_InputField_RectTransform.sizeDelta);
+        //LogText_Output.enabled = false; LogText_Output.enabled = true; //reflect ContentSizeFilter ?
         LogText_Output_InputField_RectTransform.sizeDelta = LogText_Output_RectTransform.sizeDelta;
         Canvas.ForceUpdateCanvases();
     }

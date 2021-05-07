@@ -14,13 +14,13 @@ public partial class Output: MonoBehaviour
     [SerializeField] public Text DialogDisplayNameText;
     [SerializeField] public Button DialogNextButton;
 
+    [SerializeField] public Text TerminalChanFaceText;
+
     public static TerminalChan terminalChan;
 
     private void GirlDialog_Awake()
     {
-        terminalChan = new GameObject().AddComponent<TerminalChan>();//new TerminalChan(this, myHistory);
-        terminalChan.output = this;
-        terminalChan.myHistory = myHistory;
+        terminalChan = TerminalChan.NewTerminalChan(this,myHistory);
 
         //次に進める
         DialogNextButton.onClick.AddListener(() =>
@@ -31,19 +31,19 @@ public partial class Output: MonoBehaviour
     }
 
     //コマンド実行時
-    public void GirlDialog_Command()
+    public void GirlDialog_ExecuteCommand()
     {
-        terminalChan.ShowNew();
+        terminalChan.WhenExecute();
     }
     //成功出力時
     public void GirlDialog_Success()
     {
-        terminalChan.ShowNow();
+        terminalChan.WhenSuccess();
     }
     //失敗出力時
     public void GirlDialog_Error()
     {
-        terminalChan.ShowNow();
+        terminalChan.WhenError();
     }
     //スキップ時
     public void GirlDialog_WhenSkipButtonInput()
@@ -68,25 +68,63 @@ public partial class Output: MonoBehaviour
         public static string DisplayName=TerminalChanName;
         public static int DisplayResult_LastLineIndex = -1;
 
-        public Original.MyHistory myHistory;
-        public Output output;
-
+        
         public static bool IsShowThroughing = false;
         public static bool IsAbleToShowNext = true;
 
-        public static Reaction reaction = new Reaction();
+        public Original.MyHistory myHistory;
+        public Output output;
+        public Reaction reaction;
+
+        //Like a constructor, return TerminalChan. Here you can use "Monobehavior"
+        public static TerminalChan NewTerminalChan(Output output,Original.MyHistory myHistory)
+        {
+            TerminalChan terminalChan;
+            terminalChan = new GameObject().AddComponent<TerminalChan>();//new TerminalChan(this, myHistory);
+            terminalChan.output = output;
+            terminalChan.myHistory = myHistory;
+            terminalChan.reaction = Reaction.NewTerminalChan(output);
+            return terminalChan;
+        }
 
         //Constructor
+        /*
         public  TerminalChan(Output output, Original.MyHistory myHistory)
         {
             this.myHistory = myHistory;
             this.output = output;
+            this.reaction = new Reaction(output.TerminalChanFaceText);
 
-            if(output.DialogDisplayCommandText==null || output.DialogDisplayNameText==null || output.DialogDisplayPanel==null || output.DialogDisplayResultText==null||output.DialogDisplayResultText_ForTest==null || output.DialogNextButton == null)
+            UnityEngine.Debug.LogError(this.reaction);
+
+            if(output.DialogDisplayCommandText==null || output.DialogDisplayNameText==null || output.DialogDisplayPanel==null || output.DialogDisplayResultText==null||output.DialogDisplayResultText_ForTest==null || output.DialogNextButton == null || output.TerminalChanFaceText==null)
             {
                 UnityEngine.Debug.LogError("No reference...");
             }
         }
+        */
+
+        public void WhenExecute()
+        {
+            ShowNew();
+            reaction.WhenExecute();
+        }
+        public void WhenSuccess()
+        {
+            ShowNow();
+            reaction.WhenSuccess();
+        }
+        public void WhenError()
+        {
+            ShowNow();
+            reaction.WhenError();
+        }
+        public void WhenSkipButtonInput()
+        {
+            ShowNext();
+        }
+
+
         //1つのコマンドを表示. command実行時に用いる
         public void ShowNew()
         {
@@ -285,20 +323,27 @@ public partial class Output: MonoBehaviour
         }
 
 
-        //Class Reaction
-        public class Reaction
+
+        //Class TerminalChan.Reaction
+        public class Reaction:MonoBehaviour
         {
             public static ReactionType nowReactionType = ReactionType.Idle;
 
             public static int koukando = 0;
+            public static int koukandoPerCommand = 0;
             public static int koukando_ResultSuccess = 1;
-            public static int koukando_ResultError = -4;
+            public static int koukando_ResultError = -5;
 
-            public static Dictionary<ReactionType, string[]> reactionFaceStrings = new Dictionary<ReactionType, string[]>()
+            public static float reactionDelayTime = 1.0f; //コマンド実行してからリアクションするまでの時間
+
+            public Text faceText;
+            //public GameObject gameObject;
+            //public Animator animator;
+
+            public static Dictionary<ReactionType, string[]> reactionFaceDictionary = new Dictionary<ReactionType, string[]>()
             {
-                {ReactionType.Sad, new string[]{ "", "( T-T) ｳﾙｳﾙ","。゜(つω｀）゜。", ">_<" } },
+                {ReactionType.Sad, new string[]{ "( T-T) ｳﾙｳﾙ","。゜(つω｀）゜。", ">_<" } },
                 {ReactionType.Angry, new string[]{ "(*･ε･*)ﾑｰ", "＼(○｀ε´○)ｺﾗ!ｺﾗ!", "ヽ(｀Д´#)ﾉ", "╰(◣﹏◢)╯", "(๑˘･з･˘)" } },
-                {ReactionType.Tsun, new string[]{ "(*_*;;", "(-_-;" } },
                 {ReactionType.Idle, new string[]{"(^_^)", "(^Ｏ^)" } },
                 {ReactionType.Happy, new string[]{ "ヾ(*´∀｀*)ﾉ", "(*´∇`*)", "(*^o^*)", "(〃▽〃)", "( *¯ ꒳¯*)" } },
                 {ReactionType.Dere, new string[]{ "|_-。) ポッ", "（///ω///）", "【照//∀//】","(//∇//) テレテレ","（*´ｪ｀*）ﾎﾟｯ" } },
@@ -307,56 +352,82 @@ public partial class Output: MonoBehaviour
             //数字は境値の好感度
             public enum ReactionType
             {
-                Sad = -20,  
-                Angry = -10, 
-                Tsun = -1, 
+                Sad = -10,  
+                Angry = -5, 
                 Idle =0,
-                Happy=5, 
-                Dere =20, 
+                Happy=1, 
+                Dere =10, 
             }
 
+
+            /// <summary>  return TerminalChan.Reaction with "Monobehavior" </summary>
+            /// <param name="output"> instance of class "Output" </param>
+            public static Reaction NewTerminalChan(Output output)
+            {
+                Reaction reaction= new GameObject().AddComponent<Reaction>();
+                reaction.faceText = output.TerminalChanFaceText;
+                return reaction;
+            }
             //constructor
-            public Reaction() { }
+            /*
+            public Reaction(Text faceText,GameObject gameObject=null,Animator animator=null) {
+                this.faceText = faceText;
+            }
+            */
 
-            //どのリアクションをするかを決定し、そのリアクションをする
-            public void Act()
+            //コマンドexecute時に実行
+            public void WhenExecute()
+            {
+                StopAllCoroutines();
+                StartCoroutine(ReactPerCommand());
+            }
+            //success時の好感度書き換え
+            public void WhenSuccess()
+            {
+                koukandoPerCommand += koukando_ResultSuccess;
+            }
+            //error時の好感度書き換え
+            public void WhenError()
+            {
+                koukandoPerCommand += koukando_ResultError;
+            }
+
+            //コマンド毎に実行。初期化後、ある程度時間が経過してから、それまでのエラーメッセージ、サクセスメッセージによりリアクションタイプを決めてリアクションする。
+            public IEnumerator ReactPerCommand()
+            {
+                koukandoPerCommand = 0;
+                React_NewFace_Faceless();
+                yield return new WaitForSeconds(reactionDelayTime);
+                //この間にkoukandoPerCommandの値が書き変わっていく
+                React_NewFace(koukandoPerCommand);
+                yield break;
+            }
+
+            //顔を変える(リアクション
+            public void React_NewFace(int koukandoPerCommand)
+            {
+                //UnityEngine.Debug.Log("koukandoPerCommand: "+koukandoPerCommand);
+                string[] faces=null;
+                if (koukandoPerCommand <= (int)ReactionType.Sad) reactionFaceDictionary.TryGetValue(ReactionType.Sad, out faces);
+                else if (koukandoPerCommand <= (int)ReactionType.Angry) reactionFaceDictionary.TryGetValue(ReactionType.Angry, out faces);
+                else if (koukandoPerCommand >= (int)ReactionType.Happy) reactionFaceDictionary.TryGetValue(ReactionType.Happy, out faces);
+                else if (koukandoPerCommand >= (int)ReactionType.Dere) reactionFaceDictionary.TryGetValue(ReactionType.Dere, out faces);
+                else reactionFaceDictionary.TryGetValue(ReactionType.Idle, out faces);
+
+                ;
+                faceText.text = ( (faces==null)?"":faces[Random.Range(0,faces.Length)] );
+            }
+            //顔を変える(顔なし
+            public void React_NewFace_Faceless()
+            {
+                faceText.text = "";
+            }
+            //アニメーションを変える
+            public void React_NewAnim()
             {
 
             }
-
-            //以下は反応一覧
-            public void Reset()
-            {
-
-            }
-            public void Idle()
-            {
-
-            }
-            public void Happy()
-            {
-
-            }
-            public void Sad()
-            {
-
-            }
-            public void Angry()
-            {
-
-            }
-            public void Tsun()
-            {
-
-            }
-            public void Dere()
-            {
-
-            }
-            public void Tsundere()
-            {
-
-            }
+            
         }
 
         

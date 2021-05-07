@@ -66,10 +66,10 @@ public partial class Command : MonoBehaviour
     //ShowLogOfLocalDatas
     private void ShowLocalDatas()
     {
-        output.Log_execute("SETTINGS" );
-        output.Log_success("ShellFileName: "+ShellFileName );
-        output.Log_success("ShellArguments: " + ShellArguments);
-        output.Log_success("WorkingDirectory: " + WorkingDirectory );
+        output.WhenExecute("SETTINGS" );
+        output.WhenSuccess("ShellFileName: "+ShellFileName );
+        output.WhenSuccess("ShellArguments: " + ShellArguments);
+        output.WhenSuccess("WorkingDirectory: " + WorkingDirectory );
     }
 
     //PlayerPrefsにShellFileNameを保存する
