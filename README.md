@@ -23,7 +23,7 @@
 - open application in TerminalEmulator(Linux.x86_64)/TerminalEmulatorForLinux.x86_64
 
 # MyPresentation For "MISW WELCOME PRESENTATION 2021"
-- [presentation is here](./RevealPresentation/export/index.html)
+- [presentation is here](https://snakesneaks.github.io/TerminalEmulatorWithUnity/RevealPresentation/export/)
 
 # Yet done or Help for or problems: 
 - Heavy
