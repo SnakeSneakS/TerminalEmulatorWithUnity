@@ -25,9 +25,9 @@
 # MyPresentation For "MISW WELCOME PRESENTATION 2021"
 - [presentation is here](./RevealPresentation/export/index.html)
 
-# Yet done or Help for: 
-- Maybe heavy
-- Now, just execute shell. TTY or PTY might be better. <= Now, sudo command needs option "-S" to enter superuser password...
+# Yet done or Help for or problems: 
+- Heavy
+- Now, just execute shell. TTY or PTY might be better. <= **Now, sudo command needs option "-S" to enter superuser password...**
 - Text style like "30m", "0m"
 - StandardOutput is received "Line by Line". So it can display "a\n" but can't display "a". This also matters when prompt password like "Password: ".
 - If StandardOutput is too long, text is not displayed fully. This may cased from "Mesh vertices must be under 65,000". 
