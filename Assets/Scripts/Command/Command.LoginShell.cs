@@ -65,7 +65,7 @@ public partial class Command
                     if (SW.BaseStream.CanWrite)
                     {
                         SW.WriteLine("echo \"PROCESS START...\" \n\n");
-                        SW.WriteLine("echo \"Enter \'exit\' to End PROCESS...\" ");
+                        SW.WriteLine("echo \"Enter \'EXIT\' to End PROCESS...\" ");
                     }
                     proc.WaitForExit();
 

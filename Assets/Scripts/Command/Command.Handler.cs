@@ -21,7 +21,7 @@ public partial class Command
             //shell login
             {"LOGIN", NewHandler_LoginShell() },
             //process end
-            {"exit", NewHandler_Exit() },
+            {"EXIT", NewHandler_Exit() },
             //ls
             { "ls", NewHandler_Ls() },
             //cd
