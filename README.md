@@ -1,3 +1,5 @@
+# TerminalChan
+
 # What is this?
 - Idea for Custom output of Shell Execution (like a terminal emulator) With "Unity"
     - Enjoyable chat with "TerminalChan"
